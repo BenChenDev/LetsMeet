@@ -34,7 +34,7 @@ import com.google.firebase.database.FirebaseDatabase;
 public class MainActivity extends AppCompatActivity {
     private final int Location_PERMISSION_CODE =1;
     DatabaseReference databaseTasks;
-    private FirebaseAuth mAuth;
+
     private Location currentLocation = null;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationRequest();
         FirebaseApp.initializeApp(this);
-        mAuth = FirebaseAuth.getInstance();
+
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("message");
 
