@@ -3,6 +3,7 @@ package com.example.benjamin.letsmeet;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -33,8 +34,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity {
     private final int Location_PERMISSION_CODE =1;
-    DatabaseReference databaseTasks;
-
+    private FirebaseDatabase database;
+    private String userid;
     private Location currentLocation = null;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
@@ -44,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
             for (Location location : locationResult.getLocations()) {
                 if (location != null) {
                     currentLocation = location;
+                    database = FirebaseDatabase.getInstance();
+                    DatabaseReference myRef = database.getReference().child("Users");
+
+                    myRef.child(userid).child("location").setValue(location.getLatitude(),location.getLongitude());
                     Log.d("MyLocation: ", "(" + location.getLatitude() + "," + location.getLongitude() + ")");
                 }
             }
@@ -70,10 +75,14 @@ public class MainActivity extends AppCompatActivity {
         createLocationRequest();
         FirebaseApp.initializeApp(this);
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("message");
+        Intent intentfromlogin = getIntent();
+        if(intentfromlogin != null) {
+            userid = intentfromlogin.getExtras().getString("userid");
+            database = FirebaseDatabase.getInstance();
+            DatabaseReference myRef = database.getReference().child("Users");
 
-        myRef.setValue("Hello, World!3333");
+            myRef.child(userid).child("id").setValue(userid);
+        }
 
     }
 
