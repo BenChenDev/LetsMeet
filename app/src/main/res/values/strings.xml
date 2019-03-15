@@ -2,7 +2,7 @@
     <string name="app_name">LetsMeet</string>
     <string name="action_settings">Settings</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
-    <string name="title_activity_login">Sign in</string>
+    <string name="title_activity_login">Lets Meet</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>

@@ -123,9 +123,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onResume() {
         super.onResume();
         String userid = userpreference.getString("currentuserid", null);
-        if(userid != null){
+        String useremail = userpreference.getString("currentuseremail", null);
+        if(userid != null && useremail != null){
             Intent tomainintent = new Intent(LoginActivity.this, MainActivity.class);
             tomainintent.putExtra("userid", userid);
+            tomainintent.putExtra("useremail", useremail);
             startActivity(tomainintent);
         } else {
             mEmailView.requestFocus();
@@ -293,13 +295,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 Log.d(TAG, "signInWithEmail:success");
                                 FirebaseUser user = mAuth.getCurrentUser();
                                 String userid = user.getUid();
+                                String userEmail = user.getEmail();
 
                                 SharedPreferences.Editor editor = userpreference.edit();
                                 editor.putString("currentuserid", userid);
+                                editor.putString("currentuseremail", userEmail);
                                 editor.commit();
 
                                 Intent tomainintent = new Intent(LoginActivity.this, MainActivity.class);
                                 tomainintent.putExtra("userid", userid);
+                                tomainintent.putExtra("useremail", userEmail);
                                 startActivity(tomainintent);
                             } else {
                                 // If sign in fails, display a message to the user.

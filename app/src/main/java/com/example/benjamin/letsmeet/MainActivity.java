@@ -2,8 +2,10 @@ package com.example.benjamin.letsmeet;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -28,14 +30,19 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 
 public class MainActivity extends AppCompatActivity {
     private final int Location_PERMISSION_CODE =1;
+    private final String TAG = "in_main";
     private FirebaseDatabase database;
-    private String userid;
+    private String userid, useremail, username;
     private Location currentLocation = null;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
@@ -55,19 +62,24 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    SharedPreferences userpreference;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        //share preference
+        userpreference = getSharedPreferences("userpreference", Context.MODE_PRIVATE);
 
        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(MainActivity.this, GroupEditActivity.class);
+                intent.putExtra("email", useremail);
+                startActivity(intent);
             }
         });
 
@@ -78,11 +90,36 @@ public class MainActivity extends AppCompatActivity {
         Intent intentfromlogin = getIntent();
         if(intentfromlogin != null) {
             userid = intentfromlogin.getExtras().getString("userid");
-            database = FirebaseDatabase.getInstance();
-            DatabaseReference myRef = database.getReference().child("Users");
+            useremail = intentfromlogin.getExtras().getString("useremail");
 
-            myRef.child(userid).child("id").setValue(userid);
+            database = FirebaseDatabase.getInstance();
+            final DatabaseReference myRef = database.getReference().child("Users");
+
+            myRef.child(userid).child("email").setValue(useremail);
+            Query query = myRef.child(userid).child("name");
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if(!dataSnapshot.exists()){
+                        myRef.child(userid).child("name").setValue("your name here.");
+                    } else {
+                        username = dataSnapshot.getValue(String.class);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+            SharedPreferences.Editor editor = userpreference.edit();
+            editor.putString("currentuserid", userid);
+            editor.putString("currentuseremail", useremail);
+            editor.putString("currentusername", username);
+            editor.commit();
         }
+
 
     }
 
@@ -94,6 +131,22 @@ public class MainActivity extends AppCompatActivity {
             startLocationUpdate();
         }else{
             request_permission();
+        }
+
+        String id = userpreference.getString("currentuserid", null);
+        String email = userpreference.getString("currentuseremail", null);
+        String name = userpreference.getString("currentusername", null);
+
+        if(id != null){
+            userid = id;
+        }
+
+        if(email != null){
+            useremail = email;
+        }
+
+        if(name != null){
+            username = name;
         }
     }
 
