@@ -16,6 +16,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -37,8 +39,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+
+public class MainActivity extends AppCompatActivity implements OnGroupClickListerner {
     private final int Location_PERMISSION_CODE =1;
     private final String TAG = "in_main";
     private FirebaseDatabase database;
@@ -62,6 +67,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
+    private List<Group> groups;
+    //recyclerview
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter adapter;
+
     SharedPreferences userpreference;
 
     @Override
@@ -70,6 +81,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        groups = new ArrayList<>();
+
         //share preference
         userpreference = getSharedPreferences("userpreference", Context.MODE_PRIVATE);
 
@@ -85,14 +99,17 @@ public class MainActivity extends AppCompatActivity {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         createLocationRequest();
+
+
         FirebaseApp.initializeApp(this);
+        database = FirebaseDatabase.getInstance();
 
         Intent intentfromlogin = getIntent();
         if(intentfromlogin != null) {
             userid = intentfromlogin.getExtras().getString("userid");
             useremail = intentfromlogin.getExtras().getString("useremail");
 
-            database = FirebaseDatabase.getInstance();
+
             final DatabaseReference myRef = database.getReference().child("Users");
 
             myRef.child(userid).child("email").setValue(useremail);
@@ -118,9 +135,44 @@ public class MainActivity extends AppCompatActivity {
             editor.putString("currentuseremail", useremail);
             editor.putString("currentusername", username);
             editor.commit();
+
         }
 
 
+        final DatabaseReference groupRef = database.getReference().child("Groups");
+
+        groupRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                groups.clear();
+                for(DataSnapshot taskSnapshot : dataSnapshot.getChildren()){
+                    String tempMember = taskSnapshot.child("Member").getValue(String.class);
+                    Log.d(TAG, tempMember);
+                    if(tempMember.equals(useremail)){
+                        Group group = taskSnapshot.getValue(Group.class);
+                        groups.add(group);
+                    }
+
+                }
+                    recyclerView = findViewById(R.id.recyclerView);
+                    recyclerView.setHasFixedSize(true);
+                    recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this) );
+                    displayRecordSet();
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    private void displayRecordSet() {
+        adapter = new MyAdapter(groups, this, this);
+//        checkedIds = ((MyAdapter) adapter).checkedItems;
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -228,5 +280,15 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    @Override
+    public void onItemClick(Group group) {
+
+    }
+
+    @Override
+    public void onItemLongClick(Group group) {
+
     }
 }

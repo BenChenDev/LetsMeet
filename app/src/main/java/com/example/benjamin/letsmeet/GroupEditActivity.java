@@ -47,24 +47,24 @@ public class GroupEditActivity extends AppCompatActivity {
                     final DatabaseReference ref = database.getReference().child("Groups");
                     String recordID = ref.push().getKey();
                     String groupid = recordID;
-                    ref.child(recordID).child("Group id").setValue(recordID);
+                    ref.child(recordID).child("GroupID").setValue(recordID);
                     ref.child(recordID).child("Topic").setValue(topic);
-                    ref.child(recordID).child("member").setValue(useremail);
+                    ref.child(recordID).child("Member").setValue(useremail);
 
                     for(int i = 0; i < num_members; i++){
                         String tempid = ref.push().getKey();
-                        ref.child(tempid).child("Group id").setValue(groupid);
+                        ref.child(tempid).child("GroupID").setValue(groupid);
                         ref.child(tempid).child("Topic").setValue(topic);
-                        ref.child(tempid).child("member").setValue(members[i]);
+                        ref.child(tempid).child("Member").setValue(members[i]);
                     }
 
                 } else {
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     final DatabaseReference ref = database.getReference().child("Groups");
                     String recordID = ref.push().getKey();
-                    ref.child(recordID).child("Group id").setValue(recordID);
+                    ref.child(recordID).child("GroupID").setValue(recordID);
                     ref.child(recordID).child("Topic").setValue(topic);
-                    ref.child(recordID).child("member").setValue(useremail);
+                    ref.child(recordID).child("Member").setValue(useremail);
                 }
                 Toast.makeText(getApplicationContext(), "Study group cretated", Toast.LENGTH_LONG).show();
                 finish();
