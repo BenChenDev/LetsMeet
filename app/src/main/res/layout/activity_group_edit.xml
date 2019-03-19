@@ -11,25 +11,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="28dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="8dp"
         android:text="Topic: "
         android:textAlignment="center"
         android:textSize="18sp"
         android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/topiceditText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/topiceditText" />
 
     <EditText
         android:id="@+id/topiceditText"
-        android:layout_width="223dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="46dp"
+        android:layout_marginTop="26dp"
+        android:layout_marginEnd="96dp"
         android:ems="10"
         android:hint="Enter your study topic"
         android:inputType="textPersonName"
-        app:layout_constraintBottom_toTopOf="@+id/editText3"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/Topic"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -37,35 +38,36 @@
         android:id="@+id/savebutton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="148dp"
-        android:layout_marginBottom="478dp"
+        android:layout_marginStart="120dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="119dp"
         android:text="SAVE"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/textView4"
+        app:layout_constraintStart_toStartOf="@+id/editText3"
         app:layout_constraintTop_toBottomOf="@+id/editText3" />
 
     <EditText
         android:id="@+id/editText3"
-        android:layout_width="283dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="28dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="11dp"
+        android:layout_marginEnd="4dp"
         android:ems="10"
         android:inputType="textMultiLine"
-        app:layout_constraintBottom_toTopOf="@+id/savebutton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/topiceditText" />
+        app:layout_constraintEnd_toEndOf="@+id/topiceditText"
+        app:layout_constraintStart_toStartOf="@+id/textView4"
+        app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
     <TextView
         android:id="@+id/textView4"
         android:layout_width="327dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="28dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="18dp"
         android:text="Enter group member Emails below: (Separate by ',')"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/topiceditText" />
+        app:layout_constraintTop_toBottomOf="@+id/Topic" />
 
 </android.support.constraint.ConstraintLayout>

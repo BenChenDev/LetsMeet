@@ -45,7 +45,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnGroupClickListerner {
     private final int Location_PERMISSION_CODE =1;
-    private final String TAG = "in_main";
+    private final String TAG = "inMain";
     private FirebaseDatabase database;
     private String userid, useremail, username;
     private Location currentLocation = null;
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if(!dataSnapshot.exists()){
-                        myRef.child(userid).child("name").setValue("your name here.");
+                        myRef.child(userid).child("name").setValue("Default user name");
                     } else {
                         username = dataSnapshot.getValue(String.class);
                     }
@@ -145,15 +145,43 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 groups.clear();
+                String tempmembers = "";
                 for(DataSnapshot taskSnapshot : dataSnapshot.getChildren()){
-                    String tempMember = taskSnapshot.child("Member").getValue(String.class);
-                    Log.d(TAG, tempMember);
+                    final String tempMember = taskSnapshot.child("Member").getValue(String.class);
+
                     if(tempMember.equals(useremail)){
-                        Group group = taskSnapshot.getValue(Group.class);
-                        groups.add(group);
+
+                        final Group group = new Group();
+                        String topic = taskSnapshot.child("Topic").getValue(String.class);
+
+                        group.setTopic(topic);
+
+                        String group_id = taskSnapshot.child("GroupID").getValue(String.class);
+
+                        for(DataSnapshot taskSnapshot1 : dataSnapshot.getChildren()){
+
+                            String tempgroupid = taskSnapshot1.child("GroupID").getValue(String.class);
+
+                            if(tempgroupid.equals(group_id)){
+
+                                String memberName = taskSnapshot1.child("Member").getValue(String.class);
+                                if(!memberName.equals(useremail)){
+                                    tempmembers += memberName + " ";
+
+                                }
+                            }
+                        }
+
+                            group.setMember(tempmembers);
+                            groups.add(group);
+                            tempmembers = "";
+
+
                     }
 
                 }
+
+
                     recyclerView = findViewById(R.id.recyclerView);
                     recyclerView.setHasFixedSize(true);
                     recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this) );
@@ -166,6 +194,47 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
 
             }
         });
+
+    }
+
+
+    private String getUsernames(String memberEmails){
+
+        final String[] emails = memberEmails.split("\\s+");
+        final int email_num = emails.length;
+
+        if(email_num > 0){
+            String memberNames = " ";
+            final DatabaseReference users = database.getReference().child("Users");
+            users.addValueEventListener(new ValueEventListener() {
+
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for(DataSnapshot user : dataSnapshot.getChildren()){
+                        String userEmail = user.child("email").getValue(String.class);
+                        for(int i=0; i < email_num; i++){
+                            if(emails[i].equals(userEmail)){
+                                String name = user.child("name").getValue(String.class);
+//                                memberNames += name + " ";
+                            }
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+        } else {
+
+        }
+
+
+        return " ";
+
 
     }
 

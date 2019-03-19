@@ -39,7 +39,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         final Group single_group = groups.get(position);
         holder.textViewGroup.setText(single_group.getTopic());
-
+        holder.textViewMembers.setText(single_group.getMember());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
