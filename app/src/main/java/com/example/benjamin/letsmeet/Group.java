@@ -4,13 +4,19 @@ public class Group {
     private String GroupID;
     private String Topic;
     private String Member;
+    private String Group_Owner_id;
+    private String Group_Owner_name;
+    private String Member_name;
 
     public Group(){}
 
-    public Group(String groupID, String topic, String member) {
+    public Group(String groupID, String topic, String member, String group_Owner_id, String group_Owner_name, String member_name) {
         GroupID = groupID;
         Topic = topic;
         Member = member;
+        Group_Owner_id = group_Owner_id;
+        Group_Owner_name = group_Owner_name;
+        Member_name = member_name;
     }
 
     public String getGroupID() {
@@ -35,5 +41,29 @@ public class Group {
 
     public void setMember(String member) {
         Member = member;
+    }
+
+    public String getGroup_Owner_id() {
+        return Group_Owner_id;
+    }
+
+    public String getGroup_Owner_name() {
+        return Group_Owner_name;
+    }
+
+    public String getMember_name() {
+        return Member_name;
+    }
+
+    public void setGroup_Owner_id(String group_Owner_id) {
+        Group_Owner_id = group_Owner_id;
+    }
+
+    public void setGroup_Owner_name(String group_Owner_name) {
+        Group_Owner_name = group_Owner_name;
+    }
+
+    public void setMember_name(String member_name) {
+        Member_name = member_name;
     }
 }
