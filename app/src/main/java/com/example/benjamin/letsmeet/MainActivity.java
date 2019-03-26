@@ -2,9 +2,11 @@ package com.example.benjamin.letsmeet;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -14,6 +16,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -227,7 +230,34 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
             }
         });
 
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        localBroadcastManager.registerReceiver(listener, new IntentFilter("notification"));
     }
+
+    private BroadcastReceiver listener = new BroadcastReceiver() {
+        @Override
+        public void onReceive( Context context, Intent intent ) {
+            String title = intent.getStringExtra("Title");
+            String body = intent.getStringExtra("Body");
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle(title)
+                    .setMessage(body)
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(MainActivity.this, "Ok Clicked", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create().show();
+
+        }
+    };
 
     private void displayRecordSet() {
         adapter = new MyAdapter(groups, this, this);
