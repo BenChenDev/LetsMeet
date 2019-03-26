@@ -59,9 +59,40 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                     currentLocation = location;
                     database = FirebaseDatabase.getInstance();
                     DatabaseReference myRef = database.getReference().child("Users");
-
                     myRef.child(userid).child("location").setValue(location.getLatitude(),location.getLongitude());
                     Log.d("MyLocation: ", "(" + location.getLatitude() + "," + location.getLongitude() + ")");
+                    /*todo: check locations of members in the same group, and calculate the location distance,
+                      if members are close enough, send everyone notification.
+                      so far, just the group owner do this operation
+                    */
+                    tempGroups.clear();
+                    DatabaseReference group = database.getReference().child("Groups");
+                    group.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for(DataSnapshot group : dataSnapshot.getChildren()){
+                                if(group.child("Group_Owner_id").getValue(String.class).equals(useremail)){
+                                    Group tempGroup = new Group();
+                                    tempGroup.setGroupID(group.child("GroupID").getValue(String.class));
+                                    tempGroup.setGroup_Owner_id(group.child("Group_Owner_id").getValue(String.class));
+                                    tempGroup.setGroup_Owner_name(group.child("Group_Owner_name").getValue(String.class));
+                                    tempGroup.setMember(group.child("Member").getValue(String.class));
+                                    tempGroup.setMember_name(group.child("Member_name").getValue(String.class));
+                                    tempGroup.setTopic(group.child("Topic").getValue(String.class));
+                                    tempGroups.add(tempGroup);
+                                }
+
+                            }
+
+
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+
                 }
             }
         }
@@ -72,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
     //recyclerview
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
+    List<Group> tempGroups = new ArrayList<>();
 
     SharedPreferences userpreference;
 
@@ -164,9 +196,9 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
 
                             if(tempgroupid.equals(group_id)){
 
-                                String memberName = taskSnapshot1.child("Member").getValue(String.class);
-                                if(!memberName.equals(useremail)){
-                                    tempmembers += memberName + " ";
+                                String memberName = taskSnapshot1.child("Member_name").getValue(String.class);
+                                if(!memberName.equals(username)){
+                                    tempmembers += memberName + ", ";
 
                                 }
                             }
@@ -194,47 +226,6 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
 
             }
         });
-
-    }
-
-
-    private String getUsernames(String memberEmails){
-
-        final String[] emails = memberEmails.split("\\s+");
-        final int email_num = emails.length;
-
-        if(email_num > 0){
-            String memberNames = " ";
-            final DatabaseReference users = database.getReference().child("Users");
-            users.addValueEventListener(new ValueEventListener() {
-
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for(DataSnapshot user : dataSnapshot.getChildren()){
-                        String userEmail = user.child("email").getValue(String.class);
-                        for(int i=0; i < email_num; i++){
-                            if(emails[i].equals(userEmail)){
-                                String name = user.child("name").getValue(String.class);
-//                                memberNames += name + " ";
-                            }
-                        }
-                    }
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
-
-        } else {
-
-        }
-
-
-        return " ";
-
 
     }
 
@@ -269,6 +260,14 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
         if(name != null){
             username = name;
         }
+    }
+
+
+    private boolean isGroupOwner(String email){
+        boolean isOwner = false;
+
+
+        return isOwner;
     }
 
     @Override
@@ -360,4 +359,6 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
     public void onItemLongClick(Group group) {
 
     }
+
+
 }
