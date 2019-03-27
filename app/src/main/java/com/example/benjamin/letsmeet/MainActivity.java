@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -43,7 +44,9 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity implements OnGroupClickListerner {
@@ -96,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                         }
                     });
 
+                    sendNotificationToUser(useremail, "Hi there puf!");
                 }
             }
         }
@@ -390,5 +394,16 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
 
     }
 
+    public static void sendNotificationToUser(String user, final String message) {
+        //Firebase ref = new Firebase(FIREBASE_URL);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference notifications = database.getReference().child("notificationRequests");
+        //final Firebase notifications = ref.child("notificationRequests");
 
+        Map notification = new HashMap<>();
+        notification.put("username", user);
+        notification.put("message", message);
+
+        notifications.push().setValue(notification);
+    }
 }
