@@ -34,6 +34,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -42,6 +43,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                         }
                     });
 
-                    sendNotificationToUser(useremail, "Hi there puf!");
+                    //sendNotificationToUser(useremail, "Hi there puf!");
                 }
             }
         }
@@ -236,6 +239,16 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
 
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
         localBroadcastManager.registerReceiver(listener, new IntentFilter("notification"));
+
+        FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(MainActivity.this, new OnSuccessListener<InstanceIdResult>() {
+            @Override
+            public void onSuccess(InstanceIdResult instanceIdResult) {
+                String newToken = instanceIdResult.getToken();
+                Log.e("newToken", newToken);
+                DatabaseReference ref = database.getReference().child("Users");
+                ref.child(userid).child("token").setValue(newToken);
+            }
+        });
     }
 
     private BroadcastReceiver listener = new BroadcastReceiver() {
