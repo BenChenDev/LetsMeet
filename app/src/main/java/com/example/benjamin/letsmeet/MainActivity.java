@@ -53,6 +53,17 @@ import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity implements OnGroupClickListerner {
+
+    private List<Group> groups;
+    //recyclerview
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter adapter;
+    List<Group> tempGroups = new ArrayList<>();
+    List<User> tempUsers = new ArrayList<>();
+    List<Location> tempLocations = new ArrayList<>();
+    String[] group_ids;
+    SharedPreferences userpreference;
+    private String newToken;
     private final int Location_PERMISSION_CODE =1;
     private final String TAG = "inMain";
     private FirebaseDatabase database;
@@ -67,33 +78,20 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                 if (location != null) {
                     currentLocation = location;
                     database = FirebaseDatabase.getInstance();
-                    DatabaseReference myRef = database.getReference().child("Users");
-                    myRef.child(userid).child("location").setValue(location.getLatitude(),location.getLongitude());
-                    Log.d("MyLocation: ", "(" + location.getLatitude() + "," + location.getLongitude() + ")");
-                    /*todo: check locations of members in the same group, and calculate the location distance,
-                      if members are close enough, send everyone notification.
-                      so far, just the group owner do this operation
-                    */
-                    tempGroups.clear();
-                    DatabaseReference group = database.getReference().child("Groups");
-                    group.addValueEventListener(new ValueEventListener() {
+//                    DatabaseReference myRef = database.getReference().child("Users");
+//                    myRef.child(userid).child("location").setValue(location.getLatitude() + ", " + location.getLongitude());
+//                    Log.d("MyLocation: ", "(" + location.getLatitude() + "," + location.getLongitude() + ")");
+                    final DatabaseReference updateLocationREF = database.getReference().child("Groups");
+                    updateLocationREF.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                             for(DataSnapshot group : dataSnapshot.getChildren()){
-                                if(group.child("Group_Owner_id").getValue(String.class).equals(useremail)){
-                                    Group tempGroup = new Group();
-                                    tempGroup.setGroupID(group.child("GroupID").getValue(String.class));
-                                    tempGroup.setGroup_Owner_id(group.child("Group_Owner_id").getValue(String.class));
-                                    tempGroup.setGroup_Owner_name(group.child("Group_Owner_name").getValue(String.class));
-                                    tempGroup.setMember(group.child("Member").getValue(String.class));
-                                    tempGroup.setMember_name(group.child("Member_name").getValue(String.class));
-                                    tempGroup.setTopic(group.child("Topic").getValue(String.class));
-                                    tempGroups.add(tempGroup);
+                                if(group.child("Member").getValue(String.class).equals(useremail)){
+                                    String key = group.getKey();
+                                    Log.d(TAG, "Key: " + key);
+                                    updateLocationREF.child(key).child("Location").setValue(currentLocation.getLatitude() + ", " + currentLocation.getLongitude());
                                 }
-
                             }
-
-
                         }
 
                         @Override
@@ -101,21 +99,126 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
 
                         }
                     });
+                }
+            }
 
-                    //sendNotificationToUser(useremail, "Hi there puf!");
+            /*todo: check locations of members in the same group, and calculate the location distance,
+                      if members are close enough, send everyone notification.
+                      so far, just the group owner do this operation
+                    */
+            Log.d(TAG, "*******New round********");
+            DatabaseReference group = database.getReference().child("Groups");
+            group.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    tempGroups.clear();
+                    for(DataSnapshot group : dataSnapshot.getChildren()){
+                        if(group.child("Group_Owner_id").getValue(String.class).equals(useremail)){
+                            Group tempGroup = new Group();
+                            tempGroup.setGroupID(group.child("GroupID").getValue(String.class));
+                            tempGroup.setGroup_Owner_id(group.child("Group_Owner_id").getValue(String.class));
+                            tempGroup.setGroup_Owner_name(group.child("Group_Owner_name").getValue(String.class));
+                            tempGroup.setMember(group.child("Member").getValue(String.class));
+                            tempGroup.setMember_name(group.child("Member_name").getValue(String.class));
+                            tempGroup.setTopic(group.child("Topic").getValue(String.class));
+                            tempGroup.setLocation(group.child("Location").getValue(String.class));
+                            tempGroups.add(tempGroup);
+                            Log.d(TAG, "tempGroup added to tempGroupS.");
+
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+
+            //if current user is not a group owner, the tempGroups.size() ==0
+            //get group ids of groups that current user is the group owner
+            Log.d(TAG, "tempGroups count:" + tempGroups.size());
+            if(tempGroups.size() > 0 && tempGroups.size() < 100){
+                tempUsers.clear();
+                group_ids = new String[100];//allow user be the owner of maximum 100 groups
+                int count = 0;
+                String temp_group_id = "";
+                for(Group g : tempGroups){
+                    String group_id = g.getGroupID();
+                    if(!group_id.equals(temp_group_id)){
+                        group_ids[count] = group_id;
+                        Log.d(TAG, "unique group id: " + group_ids[count]);
+                        temp_group_id = group_id;
+                        count++;
+                    }
+                }
+
+                Log.d(TAG, "total unique groups size is: " + count);
+                //find all members in the same group
+                for(int i = 0; i < count; i++){
+                    String group_id = group_ids[i];
+                    Log.d(TAG,"*****group: " + group_id);
+                    List<MyLocation> locationsInOneGroup = new ArrayList<>();
+                    for(Group g : tempGroups){
+                        if(g.getGroupID().equals(group_id)){
+                            //get location
+                            String[] oneLocation = g.getLocation().split(",[ ]*");
+                            MyLocation tempLocation = new MyLocation();
+                            tempLocation.setLatitude(Double.valueOf(oneLocation[0]));
+                            tempLocation.setLongitude(Double.valueOf(oneLocation[1]));
+                            locationsInOneGroup.add(tempLocation);
+
+                        }
+                    }
+                    //having all locations of each members in same group in locationsInOneGroup
+                    //arrayList
+                    //calculate distance
+
+                    if(locationsInOneGroup.size() > 1){
+                        //put locations in object array
+                        Log.d(TAG,"^^More than one location. " + locationsInOneGroup.size() + "sets of " +
+                                "location data");
+                        MyLocation[] locations = new MyLocation[locationsInOneGroup.size()];
+                        int locationCount = 0;
+                        for(MyLocation L : locationsInOneGroup){
+                            locations[locationCount] = L;
+                            Log.d(TAG, "index " + locationCount + ": " + "" +
+                                    "latitude: " + locations[locationCount].getLatitude() +
+                                    "Longtitude: " + locations[locationCount].getLongitude());
+                            locationCount++;
+
+                        }
+                        Log.d(TAG, "***Before calculate distance: ");
+                        //calculate distance
+                        boolean close = true;
+                        Log.d(TAG, "" + locations.length + " sets of locations that needed to be calculated.");
+                        for(int a = 0; a < locations.length; a++){
+                            for(int b = a+1; b < locations.length; b++){
+                                if(distance(locations[a].getLatitude(),
+                                        locations[a].getLongitude(),
+                                        locations[b].getLatitude(),
+                                        locations[b].getLongitude(),
+                                        'M') > 100.0){
+                                    close = false;
+                                }
+                            }
+                        }
+                        if(close){
+                            Log.d(TAG, "Seems everyone close enough.");
+
+//                                            DatabaseReference ref = database.getReference().child("Notifications");
+//                                            ref.child(userid).child("Token").setValue(newToken);
+                        }else{
+                            Log.d(TAG, "one or more members not near by.");
+                        }
+                    }else{
+                        Log.d(TAG,"Only have one location");
+                    }
                 }
             }
         }
     };
-
-
-    private List<Group> groups;
-    //recyclerview
-    private RecyclerView recyclerView;
-    private RecyclerView.Adapter adapter;
-    List<Group> tempGroups = new ArrayList<>();
-
-    SharedPreferences userpreference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,37 +290,35 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 groups.clear();
-                String tempmembers = "";
-                for(DataSnapshot taskSnapshot : dataSnapshot.getChildren()){
-                    final String tempMember = taskSnapshot.child("Member").getValue(String.class);
+                String tempGroupMember = "";
+                for(DataSnapshot singleGroup : dataSnapshot.getChildren()){
+                    tempGroupMember = singleGroup.child("Member").getValue(String.class);
 
-                    if(tempMember.equals(useremail)){
+                    //find all groups that owner is current user
+                    if(tempGroupMember != null && tempGroupMember.equals(useremail)){
 
-                        final Group group = new Group();
-                        String topic = taskSnapshot.child("Topic").getValue(String.class);
+                        Group group = new Group();
+                        String topic = singleGroup.child("Topic").getValue(String.class);
 
                         group.setTopic(topic);
 
-                        String group_id = taskSnapshot.child("GroupID").getValue(String.class);
+                        String group_id = singleGroup.child("GroupID").getValue(String.class);
 
-                        for(DataSnapshot taskSnapshot1 : dataSnapshot.getChildren()){
+                        String tempMembers = "";
 
-                            String tempgroupid = taskSnapshot1.child("GroupID").getValue(String.class);
+                        for(DataSnapshot singleGroup2 : dataSnapshot.getChildren()){
+
+                            String tempgroupid = singleGroup2.child("GroupID").getValue(String.class);
 
                             if(tempgroupid.equals(group_id)){
 
-                                String memberName = taskSnapshot1.child("Member_name").getValue(String.class);
-                                if(!memberName.equals(username)){
-                                    tempmembers += memberName + ", ";
-
-                                }
+                                String memberName = singleGroup2.child("Member_name").getValue(String.class);
+                                tempMembers += memberName + ", ";
                             }
                         }
 
-                            group.setMember(tempmembers);
-                            groups.add(group);
-                            tempmembers = "";
-
+                        group.setMember(tempMembers);
+                        groups.add(group);
 
                     }
 
@@ -243,7 +344,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
         FirebaseInstanceId.getInstance().getInstanceId().addOnSuccessListener(MainActivity.this, new OnSuccessListener<InstanceIdResult>() {
             @Override
             public void onSuccess(InstanceIdResult instanceIdResult) {
-                String newToken = instanceIdResult.getToken();
+                newToken = instanceIdResult.getToken();
                 Log.e("newToken", newToken);
                 DatabaseReference ref = database.getReference().child("Users");
                 ref.child(userid).child("token").setValue(newToken);
@@ -259,13 +360,13 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle(title)
                     .setMessage(body)
-                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                    .setPositiveButton("Let's Meet!", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Toast.makeText(MainActivity.this, "Ok Clicked", Toast.LENGTH_LONG).show();
                         }
                     })
-                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    .setNegativeButton("Nah", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
@@ -418,5 +519,33 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
         notification.put("message", message);
 
         notifications.push().setValue(notification);
+    }
+
+    private double distance(double lat1, double lon1, double lat2, double lon2, char unit) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+        if (unit == 'M') {
+            dist = dist * 1.609344 * 1000;
+        } else if (unit == 'N') {
+            dist = dist * 0.8684;
+        }
+        return (dist);
+    }
+
+    /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+    /*::  This function converts decimal degrees to radians             :*/
+    /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+    /*::  This function converts radians to decimal degrees             :*/
+    /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+    private double rad2deg(double rad) {
+        return (rad * 180.0 / Math.PI);
     }
 }

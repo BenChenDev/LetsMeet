@@ -7,16 +7,18 @@ public class Group {
     private String Group_Owner_id;
     private String Group_Owner_name;
     private String Member_name;
+    private String Location;
 
     public Group(){}
 
-    public Group(String groupID, String topic, String member, String group_Owner_id, String group_Owner_name, String member_name) {
+    public Group(String groupID, String topic, String member, String group_Owner_id, String group_Owner_name, String member_name, String location) {
         GroupID = groupID;
         Topic = topic;
         Member = member;
         Group_Owner_id = group_Owner_id;
         Group_Owner_name = group_Owner_name;
         Member_name = member_name;
+        Location = location;
     }
 
     public String getGroupID() {
@@ -29,6 +31,10 @@ public class Group {
 
     public String getMember() {
         return Member;
+    }
+
+    public String getLocation() {
+        return Location;
     }
 
     public void setGroupID(String groupID) {
@@ -65,5 +71,9 @@ public class Group {
 
     public void setMember_name(String member_name) {
         Member_name = member_name;
+    }
+
+    public void setLocation(String location) {
+        Location = location;
     }
 }
