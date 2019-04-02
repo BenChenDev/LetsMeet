@@ -4,13 +4,15 @@ public class User {
     private String email;
     private String name;
     private String location;
+    private String token;
 
     public User(){}
 
-    public User(String email, String name, String location) {
+    public User(String email, String name, String location, String token) {
         this.email = email;
         this.name = name;
         this.location = location;
+        this.token = token;
     }
 
     public String getEmail() {
@@ -35,5 +37,13 @@ public class User {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 }

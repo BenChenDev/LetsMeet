@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
             for (Location location : locationResult.getLocations()) {
                 if (location != null) {
                     currentLocation = location;
+                    Log.d(TAG, "Current location just updated!");
                     database = FirebaseDatabase.getInstance();
 //                    DatabaseReference myRef = database.getReference().child("Users");
 //                    myRef.child(userid).child("location").setValue(location.getLatitude() + ", " + location.getLongitude());
@@ -135,12 +136,34 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                 }
             });
 
+            DatabaseReference user = database.getReference().child("Users");
+            user.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    tempUsers.clear();
+                    Log.d(TAG, "****Got all users information");
+                    for(DataSnapshot user : dataSnapshot.getChildren()){
+                        User u = new User();
+                        u.setEmail(user.child("email").getValue(String.class));
+                        u.setName(user.child("name").getValue(String.class));
+                        u.setToken(user.child("token").getValue(String.class));
+                        tempUsers.add(u);
+                        Log.d(TAG, "added user in tempUser, his email: " + u.getEmail());
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
 
             //if current user is not a group owner, the tempGroups.size() ==0
             //get group ids of groups that current user is the group owner
             Log.d(TAG, "tempGroups count:" + tempGroups.size());
             if(tempGroups.size() > 0 && tempGroups.size() < 100){
-                tempUsers.clear();
+
                 group_ids = new String[100];//allow user be the owner of maximum 100 groups
                 int count = 0;
                 String temp_group_id = "";
@@ -155,11 +178,12 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                 }
 
                 Log.d(TAG, "total unique groups size is: " + count);
-                //find all members in the same group
+                //find all members in the same group, member's location and their email
                 for(int i = 0; i < count; i++){
                     String group_id = group_ids[i];
                     Log.d(TAG,"*****group: " + group_id);
                     List<MyLocation> locationsInOneGroup = new ArrayList<>();
+                    List<User> usersInOneGroup = new ArrayList<>();
                     for(Group g : tempGroups){
                         if(g.getGroupID().equals(group_id)){
                             //get location
@@ -169,6 +193,11 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                             tempLocation.setLongitude(Double.valueOf(oneLocation[1]));
                             locationsInOneGroup.add(tempLocation);
 
+                            //get member email
+                            User groupMember = new User();
+                            groupMember.setEmail(g.getMember());
+                            usersInOneGroup.add(groupMember);
+                            Log.d(TAG, "group member email: " + g.getMember());
                         }
                     }
                     //having all locations of each members in same group in locationsInOneGroup
@@ -206,14 +235,31 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                         }
                         if(close){
                             Log.d(TAG, "Seems everyone close enough.");
+                            List<String> tokens = new ArrayList<>();
+                            Log.d(TAG, "****tokens list created.");
+                            //find token for every member
+                            for(User u : usersInOneGroup){
+                                for(User uofAllUsers : tempUsers){
+                                    if(u.getEmail().equals(uofAllUsers.getEmail())){
+                                        tokens.add(uofAllUsers.getToken());
+                                        Log.d(TAG, "token add to tokens list: " + uofAllUsers.getToken());
+                                    }
+                                }
+                            }
+                            //send everyone notification
+                            DatabaseReference ref = database.getReference().child("Notifications");
+                            for(String token : tokens){
+                                String id = ref.push().getKey();
+                                ref.child(id).child("Token").setValue(token);
+                                ref.child(id).child("Sent").setValue("false");
+                                Log.d(TAG,"****notification added to DB: \ntoken is: " + token);
+                            }
 
-//                                            DatabaseReference ref = database.getReference().child("Notifications");
-//                                            ref.child(userid).child("Token").setValue(newToken);
                         }else{
                             Log.d(TAG, "one or more members not near by.");
                         }
                     }else{
-                        Log.d(TAG,"Only have one location");
+                        Log.d(TAG,"Only have one location. One member in this group.");
                     }
                 }
             }
