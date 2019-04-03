@@ -1,7 +1,8 @@
+/* eslint-disable promise/no-nesting */
 /* eslint-disable promise/always-return */
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const firebase = require('firebase');
+// const firebase = require('firebase');
 admin.initializeApp(functions.config().firebase);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -13,8 +14,8 @@ exports.myNotification = functions.database.ref('Notifications/{id}/Token').onCr
     //prepare notification payload
     const payload = {
         notification:{
-            title:'Message from cloud',
-            body:'This is a test body',
+            title:'Let\'s Meet',
+            body:'Members in group are near by, want to meet them?',
             badge:'1',
             sound:'default'
         }
@@ -31,13 +32,11 @@ exports.myNotification = functions.database.ref('Notifications/{id}/Token').onCr
             if(sent !== null && sent.localeCompare("false") === 0){
                 var token = ss.Token;
                 console.log('Token is: ' + token);
-                admin.messaging().sendToDevice(token, payload);
+                
                 console.log("Notification sent!");
                 //update sent field to true
-                var database = firebase.database();
-                console.log('The key is: ' + childSnapshot.key);
-                database.ref('Notifications/' + childSnapshot.key).set({
-                    Sent : 'true'
+                return childSnapshot.ref.update({Sent:'true'}).then(()=>{
+                    admin.messaging().sendToDevice(token, payload);
                 });
             }
             
