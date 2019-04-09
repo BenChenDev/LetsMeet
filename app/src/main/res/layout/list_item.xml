@@ -26,7 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="1dp"
             android:layout_toEndOf="@+id/checkBox"
             android:maxLines="1"
             android:text="Task"
@@ -44,7 +44,8 @@
             android:fontFamily="sans-serif-light"
             android:text="Members"
             android:textColor="@android:color/darker_gray"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:textStyle="italic" />
     </RelativeLayout>
 
 </android.support.v7.widget.CardView>

@@ -17,4 +17,8 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+
+    <string name="userName_info">(You can change your name that display in groups below)
+    </string>
+
 </resources>

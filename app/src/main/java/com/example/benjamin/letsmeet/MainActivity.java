@@ -27,6 +27,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -54,6 +56,8 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnGroupClickListerner {
 
+    Button editNamebutton;
+    TextView userNameText;
     private List<Group> groups;
     //recyclerview
     private RecyclerView recyclerView;
@@ -301,25 +305,26 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
             useremail = intentfromlogin.getExtras().getString("useremail");
 
 
-            final DatabaseReference myRef = database.getReference().child("Users");
-
-            myRef.child(userid).child("email").setValue(useremail);
-            Query query = myRef.child(userid).child("name");
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if(!dataSnapshot.exists()){
-                        myRef.child(userid).child("name").setValue("Default user name");
-                    } else {
-                        username = dataSnapshot.getValue(String.class);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
+//            final DatabaseReference myRef = database.getReference().child("Users");
+//
+//            myRef.child(userid).child("email").setValue(useremail);
+//            Query query = myRef.child(userid).child("name");
+//            query.addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                    if(!dataSnapshot.exists()){
+//                        myRef.child(userid).child("name").setValue("Default user name");
+//                    } else {
+//                        username = dataSnapshot.getValue(String.class);
+//                        userNameText.setText(username);
+//                    }
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                }
+//            });
 
             SharedPreferences.Editor editor = userpreference.edit();
             editor.putString("currentuserid", userid);
@@ -396,6 +401,20 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
                 ref.child(userid).child("token").setValue(newToken);
             }
         });
+
+        userNameText = findViewById(R.id.userNametextView);
+
+        editNamebutton = findViewById(R.id.editUserNameButton);
+        editNamebutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intentToEditUserName = new Intent(MainActivity.this, EditUserNameActivity.class);
+                String userName = userNameText.getText().toString();
+                Log.d(TAG, "current user name: " + userName);
+                intentToEditUserName.putExtra("userName", userName);
+                startActivity(intentToEditUserName);
+            }
+        });
     }
 
     private BroadcastReceiver listener = new BroadcastReceiver() {
@@ -454,6 +473,27 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
         if(name != null){
             username = name;
         }
+
+        final DatabaseReference myRef = database.getReference().child("Users");
+
+        myRef.child(userid).child("email").setValue(useremail);
+        Query query = myRef.child(userid).child("name");
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.exists()){
+                    myRef.child(userid).child("name").setValue("Default user name");
+                } else {
+                    username = dataSnapshot.getValue(String.class);
+                    userNameText.setText(username);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
 
@@ -490,6 +530,7 @@ public class MainActivity extends AppCompatActivity implements OnGroupClickListe
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(1000);
         mLocationRequest.setFastestInterval(50000);
+        //mLocationRequest.setFastestInterval(1000 * 60 * 15);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
